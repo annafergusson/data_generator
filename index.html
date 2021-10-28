@@ -188,13 +188,12 @@ pre code {
 
 
 </style>
+<button onclick="doStuff()">
+Do stuff
+</button>
 <script type="text/javascript">
 $().ready(function(){
-  
-  //----------------------------------------------------------------------------
-    doStuff(); 
-  //----------------------------------------------------------------------------
- 
+
   // set interface
   var kAppName = "data generator";
   var kVersion = "1.0";
@@ -221,6 +220,8 @@ $().ready(function(){
   }).catch(function (msg) {
     console.log(msg);
   });
+  
+});
 
 function doStuff(){
   $(".CODAP").each(function() {
@@ -302,7 +303,7 @@ function guaranteeCaseTable(name) {
   });
 }
 
-});
+
 
 </script>
 

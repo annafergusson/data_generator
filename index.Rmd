@@ -6,7 +6,6 @@ output:
       in_header: header.html
 ---
 
-
 ```{css echo=FALSE}
 /* Absolute Center Spinner */
 .loading {
@@ -25,13 +24,11 @@ output:
 
 ```
 
+<button onclick='doStuff()'>Do stuff</button>
+
 ```{js echo=FALSE}
 $().ready(function(){
-  
-  //----------------------------------------------------------------------------
-    doStuff(); 
-  //----------------------------------------------------------------------------
- 
+
   // set interface
   var kAppName = "data generator";
   var kVersion = "1.0";
@@ -58,6 +55,8 @@ $().ready(function(){
   }).catch(function (msg) {
     console.log(msg);
   });
+  
+});
 
 function doStuff(){
   $(".CODAP").each(function() {
@@ -139,6 +138,6 @@ function guaranteeCaseTable(name) {
   });
 }
 
-});
+
 
 ```
