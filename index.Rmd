@@ -59,7 +59,7 @@ $().ready(function(){
 });
 
 function doStuff(){
-  $(".CODAP").each(function() {
+
     //save current code - maybe should autosave?
     //var editor = ace.edit("tutorial-exercise-live-code-code-editor");
 		//myState.code = editor.getValue();
@@ -106,7 +106,6 @@ function doStuff(){
             dataContext: tableName
           }})
     })
-});
 }
 
 // from example CODAP plugin
