@@ -213,14 +213,14 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
       }
       data["outcomes"] = combine;
       super_data.push(data);
+      doStuff([data]); 
       if(this_trial < num_trials)
       {
-        
         setTimeout(function(){makeSpin(this_trial + 1, num_trials)}, wait*40)
       }
       else
       {
-        doStuff(super_data); 
+        //doStuff(super_data); 
       }
     }
   }
