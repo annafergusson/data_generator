@@ -53,7 +53,7 @@ td {
 </div>
 
 <div class='sectiony spinnery'>
-Spin 2 times
+Spin 3 times
 </div>
 
 <div id='spinner-wrapper' style="position:relative;  width: 200px;
@@ -160,7 +160,7 @@ function startSim(){
 function makeSpin(this_trial, num_trials){
   $("#outcome").text("");
   data = {};
-  var total_spins = 2;
+  var total_spins = 3;
   nextSpin(1, total_spins, 0, this_trial, num_trials);
 }
 
