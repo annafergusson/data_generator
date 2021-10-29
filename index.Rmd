@@ -196,7 +196,7 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
     
     
     $("#outcome").append(randOutcome);
-    var var_name = "outcome" + this_spin;
+    var var_name = "val" + this_spin;
     data[var_name] = randOutcome;
     
     if(this_spin < total_spins)
@@ -208,10 +208,24 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
       var combine = "";
       for(var i = 1; i <= total_spins; i++)
       {
-        combine = combine + data["outcome" + i];
+        combine = combine + data["val" + i];
         if(i < total_spins){combine = combine + " "}
       }
-      data["outcomes"] = combine;
+      data["vals"] = combine;
+      
+      //get this later
+      var outcomes = ["🐱","🐶"];
+      for(var i = 0; i < outcomes.length; i++)
+      {
+        var count = 0;
+        for(var j = 1; j <= total_spins; j++)
+        {
+          if(data["val" + j] == outcomes[i]){count += 1}
+        }
+         data["count(" + outcomes[i] + ")"] = count;
+      }
+      
+      alert(JSON.stringify(data));
       super_data.push(data);
       doStuff([data]); 
       if(this_trial < num_trials)
