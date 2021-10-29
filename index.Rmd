@@ -153,7 +153,7 @@ function setupSpinner(){
 
 function makeSpin(){
   $("#outcome").text("");
-  data = [];
+  data = {};
   total_spins = 2;
   nextSpin(1, total_spins);
 }
@@ -189,7 +189,7 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
     
     $("#outcome").append(randOutcome);
     var var_name = "outcome" + this_spin;
-    data[0][var_name] = randOutcome;
+    data[var_name] = randOutcome;
     
     if(this_spin < total_spins)
     {
@@ -197,7 +197,7 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
     }
     else
     { 
-      doStuff(data); 
+      doStuff([data]); 
     }
   }
 }
