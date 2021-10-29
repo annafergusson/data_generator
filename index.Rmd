@@ -53,7 +53,7 @@ td {
 </div>
 
 <div class='sectiony spinnery'>
-Spin 3 times
+Spin 5 times
 </div>
 
 <div id='spinner-wrapper' style="position:relative;  width: 200px;
@@ -160,7 +160,7 @@ function startSim(){
 function makeSpin(this_trial, num_trials){
   $("#outcome").text("");
   data = {};
-  var total_spins = 3;
+  var total_spins = 5;
   nextSpin(1, total_spins, 0, this_trial, num_trials);
 }
 
@@ -225,7 +225,7 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
          data["count(" + outcomes[i] + ")"] = count;
       }
       
-      alert(JSON.stringify(data));
+     // alert(JSON.stringify(data));
       super_data.push(data);
       doStuff([data]); 
       if(this_trial < num_trials)
