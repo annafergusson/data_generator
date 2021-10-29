@@ -67,8 +67,8 @@ Spin 2 times
 </div>
 
 <div class='sectiony'>
-<p>Repeat 1 times</p>
-<button onclick='makeSpin()'>Do stuff</button>
+<p>Repeat 10 times</p>
+<button onclick='startSim()'>Do stuff</button>
 </div>
 
 ## About
@@ -108,7 +108,8 @@ $().ready(function(){
     console.log(msg);
   });
   
-  setupSpinner()
+  setupSpinner();
+  super_data = [];
 
 });
 
@@ -151,14 +152,19 @@ function setupSpinner(){
   drawPointer(canvas, context, 0);
 }
 
-function makeSpin(){
-  $("#outcome").text("");
-  data = {};
-  total_spins = 2;
-  nextSpin(1, total_spins);
+function startSim(){
+  var num_trials = 10;
+  makeSpin(1, num_trials);
 }
 
-function nextSpin(this_spin, total_spins){
+function makeSpin(this_trial, num_trials){
+  $("#outcome").text("");
+  data = {};
+  var total_spins = 2;
+  nextSpin(1, total_spins, 0, this_trial, num_trials);
+}
+
+function nextSpin(this_spin, total_spins, starting_angle, this_trial, num_trials){
   var canvas = document.getElementById("pointer");
   var context = canvas.getContext("2d");
   var randAngle = Math.random()*2*Math.PI;
@@ -167,16 +173,18 @@ function nextSpin(this_spin, total_spins){
   if(randProp > 0.8){
     randOutcome = "🐶";
   }
-  spin(canvas, context, 0, randAngle + 4*Math.PI, 0.1, randOutcome, this_spin, total_spins)
+  spin(canvas, context, starting_angle, randAngle + 4*Math.PI, 0.1, randOutcome, this_spin, total_spins, this_trial, num_trials)
 }
 
-function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_spins){
+function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials){
+  var wait = 10;
+  
   if(angle < max)
   {
     drawPointer(canvas, context, angle);
-    var wait = 10;
+    
     setTimeout(function(){
-      spin(canvas, context, angle + speed, max, speed, randOutcome, this_spin, total_spins)
+      spin(canvas, context, angle + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
     }, wait)
   }
   else
@@ -193,7 +201,7 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
     
     if(this_spin < total_spins)
     {
-      nextSpin(this_spin + 1, total_spins)
+      setTimeout(function(){nextSpin(this_spin + 1, total_spins, max % 2*Math.PI, this_trial, num_trials)}, wait*20)
     }
     else
     { 
@@ -204,16 +212,18 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
         if(i < total_spins){combine = combine + " "}
       }
       data["outcomes"] = combine;
-      //alert(JSON.stringify([data]));
-      doStuff([data]); 
+      super_data.push(data);
+      if(this_trial < num_trials)
+      {
+        
+        setTimeout(function(){makeSpin(this_trial + 1, num_trials)}, wait*40)
+      }
+      else
+      {
+        doStuff(super_data); 
+      }
     }
   }
-}
-
-
-function something(){
-   var JSONstring = '[{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐶"},{"spinner1":"🐶"},{"spinner1":"🐶"}]';
-    var dataframe = JSON.parse(JSONstring);
 }
 
 function drawPointer(canvas, context, angle){
