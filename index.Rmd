@@ -21,10 +21,57 @@ output:
   background-color: rgba(0,0,0,0.3);
 }
 
+.title {
+  display: none;
+}
 
+tr {
+  border-top: 1px black solid !important;
+  border-bottom: 1px black solid !important;
+}
+
+td {
+  padding: 5px 10px 5px 10px !important;
+  text-align: center;
+}
+
+.shadey {background: #F0F0F0}
+    
+.sectiony {margin-top: 20px}
+  
 ```
 
-<button onclick='doStuff()'>Do stuff</button>
+# {.tabset .tabset-pills}
+
+## Data generator
+
+<div class='sectiony spinnery'>
+<table>
+<tr><td class='shadey'>Outcome</td><td>🐱</td><td>🐶</td><td>➕</td></tr>
+<tr><td class='shadey'>Probability (%)</td><td>80</td><td>20</td><td></td></tr>
+</table>
+</div>
+
+<div id='spinner-wrapper' style="position:relative;  width: 200px;
+    height: 200px;" class='sectiony'>
+<canvas id='spinner' style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+<canvas id='pointer' style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+</div>
+
+<div class='sectiony' style='height:20px'>
+<span id='outcome'></span>
+</div>
+
+<div class='sectiony'>
+<p>Repeat 1 times</p>
+<button onclick='makeSpin()'>Do stuff</button>
+</div>
+
+## About
+
+<div class='sectiony'>
+Stuff about project here
+</div>
 
 ```{js echo=FALSE}
 $().ready(function(){
@@ -44,7 +91,8 @@ $().ready(function(){
   }).then(function () {
   // initialise tool
     if (myState.code === undefined || myState.code === null) {
-      // do nothing
+      // set up default
+  
     }
     else
     {
@@ -56,18 +104,134 @@ $().ready(function(){
     console.log(msg);
   });
   
+  setupSpinner()
+
 });
 
-function doStuff(){
+function setupSpinner(){
+  var canvas = document.getElementById("spinner");
+  var context = canvas.getContext("2d");
+  canvas.width = $("#spinner-wrapper").width();
+  canvas.height = $("#spinner-wrapper").width();
+  
+  context.fillStyle = "#F0F0F0";
+  context.strokeStyle = "black";
+  context.beginPath();
+  context.arc(canvas.width/2, canvas.height/2, canvas.width*0.4, 0, 2 * Math.PI);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  
+  var startAngle = 0.75 * 2 * Math.PI;
+  
+  //show each sector/outcome
+  context.beginPath();
+  context.moveTo(canvas.width/2, canvas.height/2);
+  context.arc(canvas.width/2, canvas.height/2, canvas.width*0.4, startAngle, startAngle + 0.8 * 2 * Math.PI);
+  context.lineTo(canvas.width/2, canvas.height/2);
+  context.closePath();
+  context.stroke();
+  
+  //add text
+  context.font = canvas.width * 0.1 + "px Arial";
+  context.fillText("🐱", canvas.width*0.6, canvas.height*0.6);
+  
+  //last section doesn't need stroke - rest of space
+  context.fillText("🐶", canvas.width*0.3, canvas.height*0.3);
+  
+  //draw pointer
+  var canvas = document.getElementById("pointer");
+  var context = canvas.getContext("2d");
+  canvas.width = $("#spinner-wrapper").width();
+  canvas.height = $("#spinner-wrapper").width();
+  drawPointer(canvas, context, 0);
+}
+
+function makeSpin(){
+  $("#outcome").text("");
+  //draw pointer
+  var canvas = document.getElementById("pointer");
+  var context = canvas.getContext("2d");
+  var randAngle = Math.random()*2*Math.PI;
+  var randProp = (randAngle) / (2*Math.PI);
+  var randOutcome = "🐱";
+  if(randProp > 0.8){
+    randOutcome = "🐶";
+  }
+  spin(canvas, context, 0, randAngle + 4*Math.PI, 0.1, randOutcome)
+}
+
+function spin(canvas, context, angle, max, speed, randOutcome){
+  if(angle < max)
+  {
+    drawPointer(canvas, context, angle);
+    var wait = 10;
+    setTimeout(function(){
+      spin(canvas, context, angle + speed, max, speed, randOutcome)
+    }, wait)
+  }
+  else
+  {
+  //move if needed to max point
+  setTimeout(function(){
+      drawPointer(canvas, context, max)
+    }, wait);
+    
+   $("#outcome").text(randOutcome);
+   var data = [{"outcome":randOutcome}];
+   doStuff(data);  
+  }
+}
+
+function something(){
+   var JSONstring = '[{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐶"},{"spinner1":"🐶"},{"spinner1":"🐶"}]';
+    var dataframe = JSON.parse(JSONstring);
+}
+
+function drawPointer(canvas, context, angle){
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.lineWidth = canvas.width * 0.02;
+  context.strokeStyle = "#666666";
+  context.fillStyle = "#666666";
+  
+  //translate and rotate canvas------------
+  var x = canvas.width/2;
+  var y = canvas.height/2;
+  context.save();
+  context.translate(x, y);
+  context.rotate(angle);	
+  context.translate( -x, -y);
+  //---------------------------------------
+  context.beginPath();
+  context.moveTo(canvas.width/2, canvas.height/2);
+  context.lineTo(canvas.width/2, canvas.height*0.1);
+  context.closePath();
+  context.stroke();
+  
+  context.beginPath();
+  context.arc(canvas.width/2, canvas.height/2, canvas.width*0.02, 0, 2 * Math.PI);
+  context.closePath();
+  context.fill();
+  
+  context.beginPath();
+  context.moveTo(canvas.width/2,  canvas.height*0.07);
+  context.lineTo(canvas.width/2 + 0.04*canvas.width, canvas.height*0.15);
+  context.lineTo(canvas.width/2 - 0.04*canvas.width, canvas.height*0.15);
+  context.lineTo(canvas.width/2,  canvas.height*0.07);
+  context.closePath();
+  context.fill();
+  //--------------------------------
+  context.restore();
+  //-------------------------------
+}
+
+function doStuff(dataframe){
 
     //save current code - maybe should autosave?
     //var editor = ace.edit("tutorial-exercise-live-code-code-editor");
 		//myState.code = editor.getValue();
-		
-		//process data table
-    var JSONstring = '[{"x":"blue","y":10},{"x":"blue","y":12},{"x":"blue","y":11},{"x":"blue","y":10},{"x":"blue","y":8},{"x":"green","y":1},{"x":"green","y":2},{"x":"green","y":1},{"x":"green","y":1},{"x":"green","y":4}]';
-    var dataframe = JSON.parse(JSONstring);
-    var tableName = "data";
+ 
+    var tableName = "generated_data";
     var data = dataframe;
     var attributes = Object.keys(data[0]);
     var kAttributes = [];
