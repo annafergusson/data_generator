@@ -240,6 +240,9 @@ Probability (%)
 </tr>
 </table>
 </div>
+<div class="sectiony spinnery">
+<p>Spin 2 times</p>
+</div>
 <div id="spinner-wrapper" class="sectiony" style="position:relative;  width: 200px;
     height: 200px;">
 <canvas id="spinner" style="position: absolute; left: 0; top: 0; z-index: 0;">
@@ -270,7 +273,7 @@ $().ready(function(){
   // set interface
   var kAppName = "data generator";
   var kVersion = "1.0";
-  var kDimensions = {width: 400, height: 400};
+  var kDimensions = {width: 400, height: 600};
   
   codapInterface.init({
     title: kAppName,
@@ -340,7 +343,12 @@ function setupSpinner(){
 
 function makeSpin(){
   $("#outcome").text("");
-  //draw pointer
+  data = {};
+  total_spins = 2;
+  nextSpin(1, total_spins);
+}
+
+function nextSpin(this_spin, total_spins){
   var canvas = document.getElementById("pointer");
   var context = canvas.getContext("2d");
   var randAngle = Math.random()*2*Math.PI;
@@ -349,16 +357,16 @@ function makeSpin(){
   if(randProp > 0.8){
     randOutcome = "🐶";
   }
-  spin(canvas, context, 0, randAngle + 4*Math.PI, 0.1, randOutcome)
+  spin(canvas, context, 0, randAngle + 4*Math.PI, 0.1, randOutcome, this_spin, total_spins)
 }
 
-function spin(canvas, context, angle, max, speed, randOutcome){
+function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_spins){
   if(angle < max)
   {
     drawPointer(canvas, context, angle);
     var wait = 10;
     setTimeout(function(){
-      spin(canvas, context, angle + speed, max, speed, randOutcome)
+      spin(canvas, context, angle + speed, max, speed, randOutcome, this_spin, total_spins)
     }, wait)
   }
   else
@@ -368,9 +376,19 @@ function spin(canvas, context, angle, max, speed, randOutcome){
       drawPointer(canvas, context, max)
     }, wait);
     
-   $("#outcome").text(randOutcome);
-   var data = [{"outcome":randOutcome}];
-   doStuff(data);  
+    
+    $("#outcome").append(randOutcome);
+    var var_name = "outcome" + this_spin;
+    data[var_name] = randOutcome;
+    
+    if(this_spin < total_spins)
+    {
+      nextSpin(this_spin + 1, total_spins)
+    }
+    else
+    { 
+      doStuff(data); 
+    }
   }
 }
 
