@@ -197,10 +197,19 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
     }
     else
     { 
+      var combine = "";
+      for(var i = 1; i <= total_spins; i++)
+      {
+        combine = combine + data["outcome" + i];
+        if(i < total_spins){combine = combine + " "}
+      }
+      data["outcomes"] = combine;
+      //alert(JSON.stringify([data]));
       doStuff([data]); 
     }
   }
 }
+
 
 function something(){
    var JSONstring = '[{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐱"},{"spinner1":"🐶"},{"spinner1":"🐶"},{"spinner1":"🐶"}]';
