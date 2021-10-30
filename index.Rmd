@@ -43,15 +43,23 @@ input {width: 60px}
   
 ```
 
+# {.tabset}
+
+## One device
+
 <div class='sectiony spinnery'>
-<table id ='drv'>
-<tr><td class='shadey'>Outcome</td><td>🐱</td><td>🐶</td><td>➕</td></tr>
-<tr><td class='shadey'>Probability (%)</td><td>80</td><td>20</td><td></td></tr>
+<table id ='drv' style='float:left'>
+<tr><td class='shadey'>Outcome</td><td contenteditable='true'>🐱</td><td contenteditable='true'>🐶</td></tr>
+<tr><td class='shadey'>Probability (%)</td><td contenteditable='true'>80</td><td contenteditable='true'>20</td></tr>
 </table>
+<button onclick='addOutcome()'>Add</button>
+<br />
+<div style='clear:both'></div>
+<button onclick='setupSpinner()'>Update</button>
 </div>
 
 <div class='sectiony spinnery'>
-Spin <input type='number' id='spin_num' value=1> times
+Randomise <input type='number' id='spin_num' value=1> times <button onclick='makeSpin(1, 1)'>Check!</button>
 </div>
 
 <div id='spinner-wrapper' style="position:relative;  width: 300px;
@@ -66,9 +74,14 @@ Spin <input type='number' id='spin_num' value=1> times
 
 <div class='sectiony'>
 <p>Repeat <input type='number' id='trial_num' value=10> times</p>
-<button onclick='startSim()'>Start</button>
+<button onclick='startSim()'>Generate data</button>
 </div>
 
+## Two devices
+
+<div class='sectiony spinnery'>
+Not done yet!
+</div>
 
 ```{js echo=FALSE}
 $().ready(function(){
@@ -106,11 +119,26 @@ $().ready(function(){
 
 });
 
+//$("td").keyup(function(){setupSpinner()});
+
+function addOutcome(){
+  var table = document.getElementById('drv');
+  var cols =  table.rows[0].cells.length;
+  var cell = table.rows[0].insertCell(cols);
+  cell.innerHTML = "?";
+  cell = table.rows[1].insertCell(cols);
+  cell.innerHTML = "10";
+  $("td").prop("contenteditable", true);
+}
+
 function setupSpinner(){
+
   var canvas = document.getElementById("spinner");
   var context = canvas.getContext("2d");
   canvas.width = $("#spinner-wrapper").width();
   canvas.height = $("#spinner-wrapper").height();
+  
+  context.clearRect(0, 0, canvas.width, canvas.height);
   
   context.fillStyle = "#F0F0F0";
   context.strokeStyle = "black";
@@ -124,7 +152,7 @@ function setupSpinner(){
   var table = document.getElementById('drv');
   var lastProp = 0;
   
-  for(var i = 1; i < table.rows[0].cells.length - 1; i++)
+  for(var i = 1; i < table.rows[0].cells.length; i++)
   {
     //show the sector
     var thisProp = table.rows[1].cells[i].innerHTML/100;
@@ -139,12 +167,13 @@ function setupSpinner(){
     //show the text
     var x = canvas.width * ((thisProp)/2 + lastProp);
     var y = canvas.height/2;
-    context.font = canvas.width * 0.1 + "px Arial";
+    context.font = canvas.width * 0.05 + "px Arial";
     context.textAlign = "center";
     context.textBaseline = "middle";
+    context.fillStyle = "#000000";
     context.fillText(thisText, x, y);
     
-    lastProp = thisProp;
+    lastProp += thisProp;
   }
   
   //draw pointer
@@ -170,12 +199,28 @@ function makeSpin(this_trial, num_trials){
 function nextSpin(this_spin, total_spins, starting_prop, this_trial, num_trials){
   var canvas = document.getElementById("pointer");
   var context = canvas.getContext("2d");
-  var randProp = Math.random();
-  var randOutcome = "🐱";
-  var speed = 0.1;
-  if(randProp > 0.8){
-    randOutcome = "🐶";
+  var table = document.getElementById('drv');
+  var outcomes = [];
+  var probs = [];
+  for(var i = 1; i < table.rows[0].cells.length; i++)
+  {
+    outcomes.push(table.rows[0].cells[i].innerHTML);
+    probs.push(table.rows[1].cells[i].innerHTML/100);
   }
+  var randProp = Math.random();
+  var randOutcome = "";
+  var cumProp = 0;
+  for(var i = 0; i < outcomes.length; i++)
+  {
+      cumProp += probs[i];
+      if(randProp < cumProp){
+         randOutcome = outcomes[i]
+         break;
+      }
+  }
+  
+  var speed = 0.1;
+
   spin(canvas, context, Math.max(starting_prop - 4, 0), randProp + 4, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
 }
 
@@ -197,7 +242,7 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
       drawPointer(canvas, context, max)
     }, wait);
     
-    $("#outcome").append(randOutcome);
+    $("#outcome").append(" " + randOutcome);
     var var_name = "val" + this_spin;
     data[var_name] = randOutcome;
     
@@ -218,7 +263,13 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
         data["vals"] = combine;
         
         //get this later
-        var outcomes = ["🐱","🐶"];
+        var table = document.getElementById('drv');
+        var outcomes = [];
+        for(var i = 1; i < table.rows[0].cells.length; i++)
+        {
+          outcomes.push(table.rows[0].cells[i].innerHTML)
+        }
+        
         for(var i = 0; i < outcomes.length; i++)
         {
           var count = 0;
