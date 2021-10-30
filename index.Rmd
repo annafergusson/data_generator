@@ -39,24 +39,22 @@ td {
     
 .sectiony {margin-top: 20px}
   
+input {width: 60px}
+  
 ```
 
-# {.tabset .tabset-pills}
-
-## Data generator
-
 <div class='sectiony spinnery'>
-<table>
+<table id ='drv'>
 <tr><td class='shadey'>Outcome</td><td>🐱</td><td>🐶</td><td>➕</td></tr>
 <tr><td class='shadey'>Probability (%)</td><td>80</td><td>20</td><td></td></tr>
 </table>
 </div>
 
 <div class='sectiony spinnery'>
-Spin 5 times
+Spin <input type='number' id='spin_num' value=1> times
 </div>
 
-<div id='spinner-wrapper' style="position:relative;  width: 200px;
+<div id='spinner-wrapper' style="position:relative;  width: 300px;
     height: 200px;" class='sectiony'>
 <canvas id='spinner' style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
 <canvas id='pointer' style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
@@ -67,15 +65,10 @@ Spin 5 times
 </div>
 
 <div class='sectiony'>
-<p>Repeat 10 times</p>
-<button onclick='startSim()'>Do stuff</button>
+<p>Repeat <input type='number' id='trial_num' value=10> times</p>
+<button onclick='startSim()'>Start</button>
 </div>
 
-## About
-
-<div class='sectiony'>
-Stuff about project here
-</div>
 
 ```{js echo=FALSE}
 $().ready(function(){
@@ -117,74 +110,84 @@ function setupSpinner(){
   var canvas = document.getElementById("spinner");
   var context = canvas.getContext("2d");
   canvas.width = $("#spinner-wrapper").width();
-  canvas.height = $("#spinner-wrapper").width();
+  canvas.height = $("#spinner-wrapper").height();
   
   context.fillStyle = "#F0F0F0";
   context.strokeStyle = "black";
   context.beginPath();
-  context.arc(canvas.width/2, canvas.height/2, canvas.width*0.4, 0, 2 * Math.PI);
+  context.rect(0, 0, canvas.width, canvas.height);
   context.closePath();
   context.fill();
   context.stroke();
   
-  var startAngle = 0.75 * 2 * Math.PI;
+  //get details from DRV table
+  var table = document.getElementById('drv');
+  var lastProp = 0;
   
-  //show each sector/outcome
-  context.beginPath();
-  context.moveTo(canvas.width/2, canvas.height/2);
-  context.arc(canvas.width/2, canvas.height/2, canvas.width*0.4, startAngle, startAngle + 0.8 * 2 * Math.PI);
-  context.lineTo(canvas.width/2, canvas.height/2);
-  context.closePath();
-  context.stroke();
-  
-  //add text
-  context.font = canvas.width * 0.1 + "px Arial";
-  context.fillText("🐱", canvas.width*0.6, canvas.height*0.6);
-  
-  //last section doesn't need stroke - rest of space
-  context.fillText("🐶", canvas.width*0.3, canvas.height*0.3);
+  for(var i = 1; i < table.rows[0].cells.length - 1; i++)
+  {
+    //show the sector
+    var thisProp = table.rows[1].cells[i].innerHTML/100;
+    var thisText = table.rows[0].cells[i].innerHTML;
+    
+    context.beginPath();
+    context.moveTo(canvas.width * (lastProp + thisProp), 0);
+    context.lineTo(canvas.width * (lastProp + thisProp), canvas.height);
+    context.closePath();
+    context.stroke();
+    
+    //show the text
+    var x = canvas.width * ((thisProp)/2 + lastProp);
+    var y = canvas.height/2;
+    context.font = canvas.width * 0.1 + "px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(thisText, x, y);
+    
+    lastProp = thisProp;
+  }
   
   //draw pointer
   var canvas = document.getElementById("pointer");
   var context = canvas.getContext("2d");
   canvas.width = $("#spinner-wrapper").width();
-  canvas.height = $("#spinner-wrapper").width();
+  canvas.height = $("#spinner-wrapper").height();
   drawPointer(canvas, context, 0);
 }
 
 function startSim(){
-  var num_trials = 10;
+  var num_trials = $("#trial_num").val()*1;
   makeSpin(1, num_trials);
 }
 
 function makeSpin(this_trial, num_trials){
   $("#outcome").text("");
   data = {};
-  var total_spins = 5;
+  var total_spins = $("#spin_num").val()*1;;
   nextSpin(1, total_spins, 0, this_trial, num_trials);
 }
 
-function nextSpin(this_spin, total_spins, starting_angle, this_trial, num_trials){
+function nextSpin(this_spin, total_spins, starting_prop, this_trial, num_trials){
   var canvas = document.getElementById("pointer");
   var context = canvas.getContext("2d");
-  var randAngle = Math.random()*2*Math.PI;
-  var randProp = (randAngle) / (2*Math.PI);
+  var randProp = Math.random();
   var randOutcome = "🐱";
+  var speed = 0.1;
   if(randProp > 0.8){
     randOutcome = "🐶";
   }
-  spin(canvas, context, starting_angle, randAngle + 4*Math.PI, 0.1, randOutcome, this_spin, total_spins, this_trial, num_trials)
+  spin(canvas, context, Math.max(starting_prop - 4, 0), randProp + 4, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
 }
 
-function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials){
+function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials){
   var wait = 10;
   
-  if(angle < max)
+  if(prop < max)
   {
-    drawPointer(canvas, context, angle);
+    drawPointer(canvas, context, prop);
     
     setTimeout(function(){
-      spin(canvas, context, angle + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
+      spin(canvas, context, prop + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
     }, wait)
   }
   else
@@ -193,7 +196,6 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
   setTimeout(function(){
       drawPointer(canvas, context, max)
     }, wait);
-    
     
     $("#outcome").append(randOutcome);
     var var_name = "val" + this_spin;
@@ -205,24 +207,27 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
     }
     else
     { 
-      var combine = "";
-      for(var i = 1; i <= total_spins; i++)
+      if(total_spins > 1)
       {
-        combine = combine + data["val" + i];
-        if(i < total_spins){combine = combine + " "}
-      }
-      data["vals"] = combine;
-      
-      //get this later
-      var outcomes = ["🐱","🐶"];
-      for(var i = 0; i < outcomes.length; i++)
-      {
-        var count = 0;
-        for(var j = 1; j <= total_spins; j++)
+        var combine = "";
+        for(var i = 1; i <= total_spins; i++)
         {
-          if(data["val" + j] == outcomes[i]){count += 1}
+          combine = combine + data["val" + i];
+          if(i < total_spins){combine = combine + " "}
         }
-         data["count(" + outcomes[i] + ")"] = count;
+        data["vals"] = combine;
+        
+        //get this later
+        var outcomes = ["🐱","🐶"];
+        for(var i = 0; i < outcomes.length; i++)
+        {
+          var count = 0;
+          for(var j = 1; j <= total_spins; j++)
+          {
+            if(data["val" + j] == outcomes[i]){count += 1}
+          }
+           data["count(" + outcomes[i] + ")"] = count;
+        }
       }
       
      // alert(JSON.stringify(data));
@@ -240,41 +245,30 @@ function spin(canvas, context, angle, max, speed, randOutcome, this_spin, total_
   }
 }
 
-function drawPointer(canvas, context, angle){
+function drawPointer(canvas, context, prop){
+  if(prop > 1 && prop < 2){
+     prop = 1 - (prop - 1);
+  }
+  if(prop >= 2 && prop < 3){
+     prop = prop - 2;
+  }
+  if(prop >=3 && prop < 4){
+    prop = 1 - (prop - 1);
+  }
+  if(prop >=4){
+    prop = prop - 4;
+  }
   context.clearRect(0, 0, canvas.width, canvas.height)
   context.lineWidth = canvas.width * 0.02;
   context.strokeStyle = "#666666";
   context.fillStyle = "#666666";
-  
-  //translate and rotate canvas------------
-  var x = canvas.width/2;
-  var y = canvas.height/2;
-  context.save();
-  context.translate(x, y);
-  context.rotate(angle);	
-  context.translate( -x, -y);
-  //---------------------------------------
   context.beginPath();
-  context.moveTo(canvas.width/2, canvas.height/2);
-  context.lineTo(canvas.width/2, canvas.height*0.1);
-  context.closePath();
-  context.stroke();
-  
-  context.beginPath();
-  context.arc(canvas.width/2, canvas.height/2, canvas.width*0.02, 0, 2 * Math.PI);
+  context.moveTo(prop*canvas.width,  canvas.height*0.93);
+  context.lineTo(prop*canvas.width + 0.04*canvas.width, canvas.height);
+  context.lineTo(prop*canvas.width - 0.04*canvas.width, canvas.height);
+  context.lineTo(prop*canvas.width,  canvas.height*0.93);
   context.closePath();
   context.fill();
-  
-  context.beginPath();
-  context.moveTo(canvas.width/2,  canvas.height*0.07);
-  context.lineTo(canvas.width/2 + 0.04*canvas.width, canvas.height*0.15);
-  context.lineTo(canvas.width/2 - 0.04*canvas.width, canvas.height*0.15);
-  context.lineTo(canvas.width/2,  canvas.height*0.07);
-  context.closePath();
-  context.fill();
-  //--------------------------------
-  context.restore();
-  //-------------------------------
 }
 
 function doStuff(dataframe){
