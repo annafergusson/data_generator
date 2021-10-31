@@ -101,47 +101,54 @@ $().ready(function(){
     myState = codapInterface.getInteractiveState();
   }).then(function () {
   // initialise tool
-   var outcomes = ["🐱","🐶"];
-   var probs = [80, 20];
-   var total_spins = 1;
-   var num_trials = 10;
    
     if (myState.probs === undefined || myState.probs === null) {
       // set up default
+      var outcomes = ["🐱","🐶"];
+      var probs = [80, 20];
+      var total_spins = 1;
+      var num_trials = 10;
+      doSetup(outcomes, probs, total_spins, num_trials)
   
     }
     else
     {
   	  //use values saved in state to set options for the tool
-        outcomes = myState.outcomes;
-        probs = myState.probs;
-        total_spins = myState.total_spins;
-        num_trials = myState.num_trials;
+      var outcomes = myState.outcomes;
+      var probs = myState.probs;
+      var total_spins = myState.total_spins;
+      var num_trials = myState.num_trials;
+      doSetup(outcomes, probs, total_spins, num_trials)
     }
-   
-    
-    $("#spin_num").val(total_spins);
-    $("#trial_num").val(num_trials);
-    var table = document.getElementById('drv');
-    for(var i = 0; i < probs.length; i++)
-    {
-      var cols =  table.rows[0].cells.length;
-      var cell = table.rows[0].insertCell(cols);
-      cell.innerHTML = outcomes[i];
-      cell = table.rows[1].insertCell(cols);
-      cell.innerHTML = probs[i];
-    }
-    $("td").prop("contenteditable", true);
     
   }).catch(function (msg) {
     console.log(msg);
   });
   
+});
+
+function doSetup(outcomes, probs, total_spins, num_trials){
+
   data_version = 1;
   prev_outcomes = [];
   prev_probs = [];
   prev_spins = 0;
-  setupSpinner();
+  
+  $("#spin_num").val(total_spins);
+  $("#trial_num").val(num_trials);
+  
+  var table = document.getElementById('drv');
+  for(var i = 0; i < probs.length; i++)
+  {
+    var cols =  table.rows[0].cells.length;
+    var cell = table.rows[0].insertCell(cols);
+    cell.innerHTML = outcomes[i];
+    cell = table.rows[1].insertCell(cols);
+    cell.innerHTML = probs[i];
+  }
+
+  //make the table editable
+  $("td").prop("contenteditable", true);
   
   //disable generate data button if drv is edited until update button is pressed
   $("td").keyup(function() {
@@ -149,8 +156,10 @@ $().ready(function(){
      $('#startData').css("opacity", 0.5);
      $('#updateDRV').css("background", "yellow");
   })
-
-});
+  
+  setupSpinner();
+  
+}
 
 function addOutcome(){
   var table = document.getElementById('drv');
@@ -174,7 +183,7 @@ function deleteOutcome(){
 function setupSpinner(){
 
   //data_version += 1;
-  //saveState();
+  saveState();
   var canvas = document.getElementById("spinner");
   var context = canvas.getContext("2d");
   canvas.width = $("#spinner-wrapper").width();
