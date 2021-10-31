@@ -140,6 +140,7 @@ $().ready(function(){
   data_version = 1;
   prev_outcomes = [];
   prev_probs = [];
+  prev_spins = 0;
   setupSpinner();
   
   //disable generate data button if drv is edited until update button is pressed
@@ -173,7 +174,7 @@ function deleteOutcome(){
 function setupSpinner(){
 
   //data_version += 1;
-  saveState();
+  //saveState();
   var canvas = document.getElementById("spinner");
   var context = canvas.getContext("2d");
   canvas.width = $("#spinner-wrapper").width();
@@ -411,6 +412,7 @@ function doStuff(dataframe){
     var data = dataframe;
     var attributes = Object.keys(data[0]);
     
+    var spins = $("#spin_num").val()*1;
     var table = document.getElementById('drv');
     var outcomes = [];
     var probs = [];
@@ -420,7 +422,7 @@ function doStuff(dataframe){
       probs.push(table.rows[1].cells[i].innerHTML);
     }
     
-    if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs))
+    if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs) && prev_spins == spins)
     {
       //no change
     }
@@ -435,6 +437,7 @@ function doStuff(dataframe){
         
     prev_outcomes = outcomes;
     prev_probs = probs;
+    prev_spins = spins;
     
     var tableName = "generated_data" + data_version;
     
