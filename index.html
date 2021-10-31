@@ -217,22 +217,10 @@ input {width: 60px}
 <td class="shadey">
 Outcome
 </td>
-<td contenteditable="true">
-🐱
-</td>
-<td contenteditable="true">
-🐶
-</td>
 </tr>
 <tr>
 <td class="shadey">
 Weighting
-</td>
-<td contenteditable="true">
-80
-</td>
-<td contenteditable="true">
-20
 </td>
 </tr>
 </table>
@@ -246,12 +234,12 @@ Delete
 <div style="clear:both">
 
 </div>
-<button onclick="setupSpinner()">
+<button onclick="setupSpinner()" id="updateDRV">
 Update
 </button>
 </div>
 <div class="sectiony spinnery">
-<p>Randomise <input type="number" id="spin_num" value="1"> times</p>
+<p>Randomise <input type="number" id="spin_num"> times</p>
 </div>
 <div id="spinner-wrapper" class="sectiony" style="position:relative;  width: 300px;
     height: 100px;">
@@ -265,9 +253,9 @@ Update
 </div>
 <div class="sectiony">
 <p>
-Repeat <input type="number" id="trial_num" value="10"> times
+Repeat <input type="number" id="trial_num"> times
 </p>
-<button onclick="startSim()">
+<button onclick="startSim()" id="startData">
 Generate data
 </button>
 </div>
@@ -294,22 +282,53 @@ $().ready(function(){
     myState = codapInterface.getInteractiveState();
   }).then(function () {
   // initialise tool
-    if (myState.code === undefined || myState.code === null) {
+   var outcomes = ["🐱","🐶"];
+   var probs = [80, 20];
+   var total_spins = 1;
+   var num_trials = 10;
+   
+    if (myState.probs === undefined || myState.probs === null) {
       // set up default
   
     }
     else
     {
       //use values saved in state to set options for the tool
-      //editor.setValue(myState.code); 
-      
+        outcomes = myState.outcomes;
+        probs = myState.probs;
+        total_spins = myState.total_spins;
+        num_trials = myState.num_trials;
     }
+   
+    
+    $("#spin_num").val(total_spins);
+    $("#trial_num").val(num_trials);
+    var table = document.getElementById('drv');
+    for(var i = 0; i < probs.length; i++)
+    {
+      var cols =  table.rows[0].cells.length;
+      var cell = table.rows[0].insertCell(cols);
+      cell.innerHTML = outcomes[i];
+      cell = table.rows[1].insertCell(cols);
+      cell.innerHTML = probs[i];
+    }
+    $("td").prop("contenteditable", true);
+    
   }).catch(function (msg) {
     console.log(msg);
   });
   
-  setupSpinner();
   data_version = 1;
+  prev_outcomes = [];
+  prev_probs = [];
+  setupSpinner();
+  
+  //disable generate data button if drv is edited until update button is pressed
+  $("td").keyup(function() {
+     $('#startData').prop('disabled', true);
+     $('#startData').css("opacity", 0.5);
+     $('#updateDRV').css("background", "yellow");
+  })
 
 });
 
@@ -334,6 +353,8 @@ function deleteOutcome(){
 
 function setupSpinner(){
 
+  //data_version += 1;
+  saveState();
   var canvas = document.getElementById("spinner");
   var context = canvas.getContext("2d");
   canvas.width = $("#spinner-wrapper").width();
@@ -392,9 +413,15 @@ function setupSpinner(){
   canvas.width = $("#spinner-wrapper").width();
   canvas.height = $("#spinner-wrapper").height();
   drawPointer(canvas, context, 0);
+  
+   $('#startData').prop('disabled', false);
+   $('#startData').css("opacity", 1);
+   $('#updateDRV').css("background", "");
+
 }
 
 function startSim(){
+  saveState();
   super_data = [];
   var num_trials = $("#trial_num").val()*1;
   makeSpin(1, num_trials);
@@ -403,7 +430,7 @@ function startSim(){
 function makeSpin(this_trial, num_trials){
   $("#outcome").text("");
   data = {};
-  var total_spins = $("#spin_num").val()*1;;
+  var total_spins = $("#spin_num").val()*1;
   nextSpin(1, total_spins, 0, this_trial, num_trials);
 }
 
@@ -541,20 +568,55 @@ function drawPointer(canvas, context, prop){
   context.fill();
 }
 
-function doStuff(dataframe){
+function saveState(){
+  var table = document.getElementById('drv');
+  var outcomes = [];
+  var probs = [];
+  for(var i = 1; i < table.rows[0].cells.length; i++)
+  {
+    outcomes.push(table.rows[0].cells[i].innerHTML);
+    probs.push(table.rows[1].cells[i].innerHTML);
+  }
+  var num_trials = $("#trial_num").val()*1;
+  var total_spins = $("#spin_num").val()*1;
+  
+  //save
+  myState.outcomes = outcomes;
+  myState.probs = probs;
+  myState.num_trials = num_trials;
+  myState.total_spins = total_spins;
+}
 
-    //save current code - maybe should autosave?
-    //var editor = ace.edit("tutorial-exercise-live-code-code-editor");
-        //myState.code = editor.getValue();
+function doStuff(dataframe){
  
     var data = dataframe;
     var attributes = Object.keys(data[0]);
-    //check if the vars have changed
-    var prev_attributes = Object.keys(super_data[0]);
-    if(attributes !== prev_attributes)
+    
+    var table = document.getElementById('drv');
+    var outcomes = [];
+    var probs = [];
+    for(var i = 1; i < table.rows[0].cells.length; i++)
     {
-      data_version += 1;
+      outcomes.push(table.rows[0].cells[i].innerHTML);
+      probs.push(table.rows[1].cells[i].innerHTML);
     }
+    
+    if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs))
+    {
+      //no change
+    }
+    else
+    {
+      //change
+      if(prev_outcomes.length > 0)
+      { 
+        data_version += 1;
+      }
+    }
+        
+    prev_outcomes = outcomes;
+    prev_probs = probs;
+    
     var tableName = "generated_data" + data_version;
     
     var kAttributes = [];
@@ -593,6 +655,20 @@ function doStuff(dataframe){
             dataContext: tableName
           }})
     })
+}
+
+function compareArrays(arrOne, arrTwo){
+  result = false;
+  if (arrOne.length === arrTwo.length) {
+  for (let i = 0; i < arrOne.length; i++) {
+    result = arrTwo.indexOf(arrOne[i]) !== -1;
+
+    if (result === false) {
+      break;
+    }
+  }
+}
+return result;
 }
 
 // from example CODAP plugin
