@@ -226,7 +226,7 @@ Outcome
 </tr>
 <tr>
 <td class="shadey">
-Probability (%)
+Weighting
 </td>
 <td contenteditable="true">
 80
@@ -238,6 +238,9 @@ Probability (%)
 </table>
 <button onclick="addOutcome()">
 Add
+</button>
+<button onclick="deleteOutcome()">
+Delete
 </button>
 <br />
 <div style="clear:both">
@@ -251,7 +254,7 @@ Update
 <p>Randomise <input type="number" id="spin_num" value="1"> times</p>
 </div>
 <div id="spinner-wrapper" class="sectiony" style="position:relative;  width: 300px;
-    height: 200px;">
+    height: 100px;">
 <canvas id="spinner" style="position: absolute; left: 0; top: 0; z-index: 0;">
 </canvas>
 <canvas id="pointer" style="position: absolute; left: 0; top: 0; z-index: 1;">
@@ -306,11 +309,9 @@ $().ready(function(){
   });
   
   setupSpinner();
-  super_data = [];
+  data_version = 1;
 
 });
-
-//$("td").keyup(function(){setupSpinner()});
 
 function addOutcome(){
   var table = document.getElementById('drv');
@@ -320,6 +321,15 @@ function addOutcome(){
   cell = table.rows[1].insertCell(cols);
   cell.innerHTML = "10";
   $("td").prop("contenteditable", true);
+}
+
+function deleteOutcome(){
+  var table = document.getElementById('drv');
+  var cols =  table.rows[0].cells.length;
+  if(cols > 1){
+    table.rows[0].deleteCell(cols - 1);
+    table.rows[1].deleteCell(cols - 1);
+  }
 }
 
 function setupSpinner(){
@@ -343,10 +353,19 @@ function setupSpinner(){
   var table = document.getElementById('drv');
   var lastProp = 0;
   
+  //get sum of weightings
+  var sumWeights = 0;
   for(var i = 1; i < table.rows[0].cells.length; i++)
   {
     //show the sector
-    var thisProp = table.rows[1].cells[i].innerHTML/100;
+    sumWeights += table.rows[1].cells[i].innerHTML * 1;
+  }
+  
+  
+  for(var i = 1; i < table.rows[0].cells.length; i++)
+  {
+    //show the sector
+    var thisProp = table.rows[1].cells[i].innerHTML/sumWeights;
     var thisText = table.rows[0].cells[i].innerHTML;
     
     context.beginPath();
@@ -376,6 +395,7 @@ function setupSpinner(){
 }
 
 function startSim(){
+  super_data = [];
   var num_trials = $("#trial_num").val()*1;
   makeSpin(1, num_trials);
 }
@@ -391,12 +411,19 @@ function nextSpin(this_spin, total_spins, starting_prop, this_trial, num_trials)
   var canvas = document.getElementById("pointer");
   var context = canvas.getContext("2d");
   var table = document.getElementById('drv');
+  var sumWeights = 0;
+  for(var i = 1; i < table.rows[0].cells.length; i++)
+  {
+    //show the sector
+    sumWeights += table.rows[1].cells[i].innerHTML * 1;
+  }
+  
   var outcomes = [];
   var probs = [];
   for(var i = 1; i < table.rows[0].cells.length; i++)
   {
     outcomes.push(table.rows[0].cells[i].innerHTML);
-    probs.push(table.rows[1].cells[i].innerHTML/100);
+    probs.push(table.rows[1].cells[i].innerHTML/sumWeights);
   }
   var randProp = Math.random();
   var randOutcome = "";
@@ -500,6 +527,7 @@ function drawPointer(canvas, context, prop){
   if(prop >=4){
     prop = prop - 4;
   }
+  
   context.clearRect(0, 0, canvas.width, canvas.height)
   context.lineWidth = canvas.width * 0.02;
   context.strokeStyle = "#666666";
@@ -519,9 +547,16 @@ function doStuff(dataframe){
     //var editor = ace.edit("tutorial-exercise-live-code-code-editor");
         //myState.code = editor.getValue();
  
-    var tableName = "generated_data";
     var data = dataframe;
     var attributes = Object.keys(data[0]);
+    //check if the vars have changed
+    var prev_attributes = Object.keys(super_data[0]);
+    if(attributes !== prev_attributes)
+    {
+      data_version += 1;
+    }
+    var tableName = "generated_data" + data_version;
+    
     var kAttributes = [];
     for(var i = 0; i < attributes.length; i++)
     {
