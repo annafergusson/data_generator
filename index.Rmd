@@ -37,9 +37,12 @@ td {
 
 .shadey {background: #F0F0F0}
     
-.sectiony {margin-top: 20px}
+.sectiony {margin-top: 20px;
+  display:none;}
   
 input {width: 60px}
+
+.but {margin-left: 5px}
   
 ```
 
@@ -52,12 +55,12 @@ input {width: 60px}
 <tr><td class='shadey'>Outcome</td></tr>
 <tr><td class='shadey'>Weighting</td></tr>
 </table>
-<button onclick='addOutcome()'>Add</button>
-<button onclick='deleteOutcome()'>Delete</button>
-<br />
-<div style='clear:both'></div>
-<button onclick='setupSpinner()' id='updateDRV'>Update</button>
+<button class='but' onclick='addOutcome()'>+</button>
+<button class='but' onclick='deleteOutcome()'>&#8211;</button>
+<button class='but' onclick='setupSpinner()' id='updateDRV'>Update</button>
 </div>
+
+<div style='clear:both'></div>
 
 <div class='sectiony spinnery'>
 Randomise <input type='number' id='spin_num'> times
@@ -75,6 +78,7 @@ Randomise <input type='number' id='spin_num'> times
 
 <div class='sectiony'>
 <p>Repeat <input type='number' id='trial_num'> times</p>
+<p>Speed: <select id='speed'><option>slow</option><option>medium</option></select></p>
 <button onclick='startSim()' id='startData'>Generate data</button>
 </div>
 
@@ -101,7 +105,6 @@ $().ready(function(){
     myState = codapInterface.getInteractiveState();
   }).then(function () {
   // initialise tool
-   
     if (myState.probs === undefined || myState.probs === null) {
       // set up default
       var outcomes = ["🐱","🐶"];
@@ -109,7 +112,6 @@ $().ready(function(){
       var total_spins = 1;
       var num_trials = 10;
       doSetup(outcomes, probs, total_spins, num_trials)
-  
     }
     else
     {
@@ -122,7 +124,12 @@ $().ready(function(){
     }
     
   }).catch(function (msg) {
-    console.log(msg);
+      //for testing outside CODAP
+      var outcomes = ["🐱","🐶"];
+      var probs = [80, 20];
+      var total_spins = 1;
+      var num_trials = 10;
+      doSetup(outcomes, probs, total_spins, num_trials)
   });
   
 });
@@ -149,16 +156,17 @@ function doSetup(outcomes, probs, total_spins, num_trials){
 
   //make the table editable
   $("td").prop("contenteditable", true);
-  
-  //disable generate data button if drv is edited until update button is pressed
-  $("td").keyup(function() {
-     $('#startData').prop('disabled', true);
-     $('#startData').css("opacity", 0.5);
-     $('#updateDRV').css("background", "yellow");
-  })
-  
+  $("td").keyup(makeChange)
   setupSpinner();
   
+}
+
+function makeChange(){
+   $('#startData').prop('disabled', true);
+     $('#startData').css("opacity", 0.5);
+     $('#updateDRV').css("background", "yellow");
+     $('#updateDRV').css("border", "none");
+     $('#updateDRV').show();
 }
 
 function addOutcome(){
@@ -169,6 +177,7 @@ function addOutcome(){
   cell = table.rows[1].insertCell(cols);
   cell.innerHTML = "10";
   $("td").prop("contenteditable", true);
+  makeChange();
 }
 
 function deleteOutcome(){
@@ -178,6 +187,7 @@ function deleteOutcome(){
     table.rows[0].deleteCell(cols - 1);
     table.rows[1].deleteCell(cols - 1);
   }
+  makeChange();
 }
 
 function setupSpinner(){
@@ -246,7 +256,8 @@ function setupSpinner(){
    $('#startData').prop('disabled', false);
    $('#startData').css("opacity", 1);
    $('#updateDRV').css("background", "");
-
+   $(".sectiony").show();
+   $('#updateDRV').hide();
 }
 
 function startSim(){
@@ -294,12 +305,19 @@ function nextSpin(this_spin, total_spins, starting_prop, this_trial, num_trials)
   }
   
   var speed = 0.1;
-
+  if($("#speed").val() == "medium")
+  {
+    speed = 0.4;
+  }
   spin(canvas, context, Math.max(starting_prop - 4, 0), randProp + 4, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
 }
 
 function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials){
   var wait = 10;
+  if($("#speed").val() == "medium")
+  {
+    wait = 4;
+  }
   
   if(prop < max)
   {
@@ -322,7 +340,8 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
     
     if(this_spin < total_spins)
     {
-      setTimeout(function(){nextSpin(this_spin + 1, total_spins, max % 2*Math.PI, this_trial, num_trials)}, wait*20)
+      var speed_time = wait*20;
+      setTimeout(function(){nextSpin(this_spin + 1, total_spins, max % 2*Math.PI, this_trial, num_trials)}, speed_time)
     }
     else
     { 
@@ -389,10 +408,10 @@ function drawPointer(canvas, context, prop){
   context.strokeStyle = "#666666";
   context.fillStyle = "#666666";
   context.beginPath();
-  context.moveTo(prop*canvas.width,  canvas.height*0.93);
+  context.moveTo(prop*canvas.width,  canvas.height*0.85);
   context.lineTo(prop*canvas.width + 0.04*canvas.width, canvas.height);
   context.lineTo(prop*canvas.width - 0.04*canvas.width, canvas.height);
-  context.lineTo(prop*canvas.width,  canvas.height*0.93);
+  context.lineTo(prop*canvas.width,  canvas.height*0.85);
   context.closePath();
   context.fill();
 }
@@ -410,10 +429,13 @@ function saveState(){
   var total_spins = $("#spin_num").val()*1;
   
   //save
-  myState.outcomes = outcomes;
-  myState.probs = probs;
-  myState.num_trials = num_trials;
-  myState.total_spins = total_spins;
+  if (typeof myState !== 'undefined')
+  {
+    myState.outcomes = outcomes;
+    myState.probs = probs;
+    myState.num_trials = num_trials;
+    myState.total_spins = total_spins;
+  }
 }
 
 function doStuff(dataframe){
