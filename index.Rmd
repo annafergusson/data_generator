@@ -413,7 +413,10 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
       {
         super_data.push(data);
       }
-      doStuff([data]); 
+      else
+      {
+        doStuff([data]); 
+      }
       if(this_trial < num_trials)
       {
         setTimeout(function(){makeSpin(this_trial + 1, num_trials)}, wait*40)
