@@ -258,7 +258,7 @@ Update
 Repeat <input type="number" id="trial_num"> times
 </p>
 <p>
-Speed: <select id="speed"><option>slow</option><option>medium</option></select>
+Speed: <select id="speed"><option>slow</option><option>medium</option><option>fast</option><option>bam</option></select>
 </p>
 <button onclick="startSim()" id="startData">
 Generate data
@@ -293,7 +293,8 @@ $().ready(function(){
       var probs = [80, 20];
       var total_spins = 1;
       var num_trials = 10;
-      doSetup(outcomes, probs, total_spins, num_trials)
+      var speed = "slow";
+      doSetup(outcomes, probs, total_spins, num_trials, speed)
     }
     else
     {
@@ -302,7 +303,8 @@ $().ready(function(){
       var probs = myState.probs;
       var total_spins = myState.total_spins;
       var num_trials = myState.num_trials;
-      doSetup(outcomes, probs, total_spins, num_trials)
+      var speed = myState.speed;
+      doSetup(outcomes, probs, total_spins, num_trials, speed)
     }
     
   }).catch(function (msg) {
@@ -310,13 +312,14 @@ $().ready(function(){
       var outcomes = ["🐱","🐶"];
       var probs = [80, 20];
       var total_spins = 1;
-      var num_trials = 10;
-      doSetup(outcomes, probs, total_spins, num_trials)
+      var num_trials = 20;
+      var speed = "slow";
+      doSetup(outcomes, probs, total_spins, num_trials, speed)
   });
   
 });
 
-function doSetup(outcomes, probs, total_spins, num_trials){
+function doSetup(outcomes, probs, total_spins, num_trials, speed){
 
   data_version = 1;
   prev_outcomes = [];
@@ -325,6 +328,8 @@ function doSetup(outcomes, probs, total_spins, num_trials){
   
   $("#spin_num").val(total_spins);
   $("#trial_num").val(num_trials);
+ // $('#speed option[value=' + speed + ']').prop('selected', 'selected');
+  $("#speed").val(speed);
   
   var table = document.getElementById('drv');
   for(var i = 0; i < probs.length; i++)
@@ -338,6 +343,7 @@ function doSetup(outcomes, probs, total_spins, num_trials){
 
   //make the table editable
   $("td").prop("contenteditable", true);
+  $(".shadey").prop("contenteditable", false);
   $("td").keyup(makeChange)
   setupSpinner();
   
@@ -345,10 +351,10 @@ function doSetup(outcomes, probs, total_spins, num_trials){
 
 function makeChange(){
    $('#startData').prop('disabled', true);
-     $('#startData').css("opacity", 0.5);
-     $('#updateDRV').css("background", "yellow");
-     $('#updateDRV').css("border", "none");
-     $('#updateDRV').show();
+   $('#startData').css("opacity", 0.5);
+   $('#updateDRV').css("background", "yellow");
+   $('#updateDRV').css("border", "none");
+   $('#updateDRV').show();
 }
 
 function addOutcome(){
@@ -486,25 +492,51 @@ function nextSpin(this_spin, total_spins, starting_prop, this_trial, num_trials)
       }
   }
   
+  // if speed is bam, loop through the trials and push data in one go
+  
   var speed = 0.1;
   if($("#speed").val() == "medium")
   {
     speed = 0.4;
   }
-  spin(canvas, context, Math.max(starting_prop - 4, 0), randProp + 4, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
+  
+  if($("#speed").val() == "fast")
+  {
+    speed = 1;
+  }
+  
+  var prop = Math.max(starting_prop - 4, 0);
+  var max = randProp + 4;
+  
+  if($("#speed").val() == "bam")
+  {
+    speed = 10;
+    prop = max;
+  }
+  spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
 }
 
 function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials){
   var wait = 10;
+  
   if($("#speed").val() == "medium")
   {
     wait = 4;
   }
   
+  if($("#speed").val() == "fast")
+  {
+    wait = 1;
+  }
+  
+  if($("#speed").val() == "bam")
+  {
+    wait = 0;
+  }
+  
   if(prop < max)
   {
     drawPointer(canvas, context, prop);
-    
     setTimeout(function(){
       spin(canvas, context, prop + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
     }, wait)
@@ -512,11 +544,13 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
   else
   {
   //move if needed to max point
-  setTimeout(function(){
-      drawPointer(canvas, context, max)
-    }, wait);
+    if(speed !== 10){
+      setTimeout(function(){
+        drawPointer(canvas, context, max)
+      }, wait);
     
     $("#outcome").append(" " + randOutcome);
+    }
     var var_name = "val" + this_spin;
     data[var_name] = randOutcome;
     
@@ -557,7 +591,10 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
       }
       
      // alert(JSON.stringify(data));
-      super_data.push(data);
+      if($("#speed").val() == "bam")
+      {
+        super_data.push(data);
+      }
       doStuff([data]); 
       if(this_trial < num_trials)
       {
@@ -565,7 +602,10 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
       }
       else
       {
-        //doStuff(super_data); 
+        if($("#speed").val() == "bam")
+        {
+          doStuff(super_data); 
+        }
       }
     }
   }
@@ -617,6 +657,7 @@ function saveState(){
     myState.probs = probs;
     myState.num_trials = num_trials;
     myState.total_spins = total_spins;
+    myState.speed = $("#speed").val();
   }
 }
 
@@ -690,6 +731,7 @@ function doStuff(dataframe){
             dataContext: tableName
           }})
     })
+
 }
 
 function compareArrays(arrOne, arrTwo){
