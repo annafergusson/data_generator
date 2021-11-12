@@ -49,7 +49,7 @@ input {width: 60px}
 # {.tabset}
 
 ## One device
-
+<div class='loading' style='display:none'></div>
 <div class='sectiony spinnery'>
 <table id ='drv' style='float:left'>
 <tr><td class='shadey'>Outcome</td></tr>
@@ -330,6 +330,7 @@ function nextSpin(this_spin, total_spins, starting_prop, this_trial, num_trials)
   {
     speed = 10;
     prop = max;
+    $(".loading").show();
   }
   spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
 }
@@ -417,6 +418,7 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
       {
         doStuff([data]); 
       }
+      
       if(this_trial < num_trials)
       {
         setTimeout(function(){makeSpin(this_trial + 1, num_trials)}, wait*40)
@@ -426,6 +428,7 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
         if($("#speed").val() == "bam")
         {
           doStuff(super_data); 
+          $(".loading").hide();
         }
       }
     }
