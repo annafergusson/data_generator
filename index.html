@@ -207,13 +207,13 @@ td {
   
 input {width: 60px}
 
+#table_name {width: 200px;}
+
 .but {margin-left: 5px}
+
+#footer{padding: 20px; background: #F6ECEA; margin-top: 20px;}
   
 </style>
-<div id="section" class="section level1 tabset">
-<h1 class="tabset"></h1>
-<div id="one-device" class="section level2">
-<h2>One device</h2>
 <div class="loading" style="display:none">
 
 </div>
@@ -247,7 +247,7 @@ Update
 <p>Randomise <input type="number" id="spin_num"> times</p>
 </div>
 <div id="spinner-wrapper" class="sectiony" style="position:relative;  width: 300px;
-    height: 100px;">
+    height: 50px;">
 <canvas id="spinner" style="position: absolute; left: 0; top: 0; z-index: 0;">
 </canvas>
 <canvas id="pointer" style="position: absolute; left: 0; top: 0; z-index: 1;">
@@ -263,15 +263,17 @@ Repeat <input type="number" id="trial_num"> times
 <p>
 Speed: <select id="speed"><option>slow</option><option>medium</option><option>fast</option><option>bam</option></select>
 </p>
+<p>
 <button onclick="startSim()" id="startData">
 Generate data
 </button>
+</p>
+<p>
+Table name: <input id="table_name">
+</p>
 </div>
-</div>
-<div id="two-devices" class="section level2">
-<h2>Two devices</h2>
-<div class="sectiony spinnery">
-<p>Not done yet!</p>
+<div id="footer">
+This plugin was developed by Anna Fergusson, University of Auckland.
 </div>
 <script type="text/javascript">
 $().ready(function(){
@@ -297,7 +299,8 @@ $().ready(function(){
       var total_spins = 1;
       var num_trials = 10;
       var speed = "slow";
-      doSetup(outcomes, probs, total_spins, num_trials, speed)
+      var table_name = "generated_data1";
+      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name)
     }
     else
     {
@@ -307,7 +310,8 @@ $().ready(function(){
       var total_spins = myState.total_spins;
       var num_trials = myState.num_trials;
       var speed = myState.speed;
-      doSetup(outcomes, probs, total_spins, num_trials, speed)
+      var table_name = myState.table_name;
+      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name)
     }
     
   }).catch(function (msg) {
@@ -317,12 +321,13 @@ $().ready(function(){
       var total_spins = 1;
       var num_trials = 20;
       var speed = "slow";
-      doSetup(outcomes, probs, total_spins, num_trials, speed)
+      var table_name = "generated_data1";
+      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name)
   });
   
 });
 
-function doSetup(outcomes, probs, total_spins, num_trials, speed){
+function doSetup(outcomes, probs, total_spins, num_trials, speed, table_name){
 
   data_version = 1;
   prev_outcomes = [];
@@ -333,6 +338,7 @@ function doSetup(outcomes, probs, total_spins, num_trials, speed){
   $("#trial_num").val(num_trials);
  // $('#speed option[value=' + speed + ']').prop('selected', 'selected');
   $("#speed").val(speed);
+  $("#table_name").val(table_name);
   
   var table = document.getElementById('drv');
   for(var i = 0; i < probs.length; i++)
@@ -348,6 +354,7 @@ function doSetup(outcomes, probs, total_spins, num_trials, speed){
   $("td").prop("contenteditable", true);
   $(".shadey").prop("contenteditable", false);
   $("td").keyup(makeChange)
+  $("#spin_num").change(makeChange)
   setupSpinner();
   
 }
@@ -384,6 +391,35 @@ function deleteOutcome(){
 function setupSpinner(){
 
   //data_version += 1;
+  var spins = $("#spin_num").val()*1;
+  var table = document.getElementById('drv');
+  var outcomes = [];
+  var probs = [];
+  for(var i = 1; i < table.rows[0].cells.length; i++)
+  {
+    outcomes.push(table.rows[0].cells[i].innerHTML);
+    probs.push(table.rows[1].cells[i].innerHTML);
+  }
+  
+  if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs) && prev_spins == spins)
+  {
+    //no change
+  }
+  else
+  {
+    //change
+    if(prev_outcomes.length > 0)
+    { 
+      data_version += 1;
+      var tableName = "generated_data" + data_version;
+      $("#table_name").val(tableName);
+    }
+  }
+      
+  prev_outcomes = outcomes;
+  prev_probs = probs;
+  prev_spins = spins;
+  
   saveState();
   var canvas = document.getElementById("spinner");
   var context = canvas.getContext("2d");
@@ -667,6 +703,16 @@ function saveState(){
     myState.num_trials = num_trials;
     myState.total_spins = total_spins;
     myState.speed = $("#speed").val();
+    if($("#table_name").val() !== "")
+    {
+        myState.table_name = $("#table_name").val();
+    }
+    else
+    {
+        var tableName = "generated_data" + data_version;
+        $("#table_name").val(tableName);
+        myState.table_name = tableName;
+    }
   }
 }
 
@@ -674,35 +720,8 @@ function doStuff(dataframe){
  
     var data = dataframe;
     var attributes = Object.keys(data[0]);
-    
-    var spins = $("#spin_num").val()*1;
-    var table = document.getElementById('drv');
-    var outcomes = [];
-    var probs = [];
-    for(var i = 1; i < table.rows[0].cells.length; i++)
-    {
-      outcomes.push(table.rows[0].cells[i].innerHTML);
-      probs.push(table.rows[1].cells[i].innerHTML);
-    }
-    
-    if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs) && prev_spins == spins)
-    {
-      //no change
-    }
-    else
-    {
-      //change
-      if(prev_outcomes.length > 0)
-      { 
-        data_version += 1;
-      }
-    }
-        
-    prev_outcomes = outcomes;
-    prev_probs = probs;
-    prev_spins = spins;
-    
-    var tableName = "generated_data" + data_version;
+    var tableName = $("#table_name").val();
+    tableName = tableName.split(" ").join("_");
     
     var kAttributes = [];
     for(var i = 0; i < attributes.length; i++)
@@ -789,8 +808,6 @@ function guaranteeCaseTable(name) {
 
 
 </script>
-</div>
-</div>
 
 
 
