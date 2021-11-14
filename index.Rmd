@@ -522,6 +522,7 @@ function saveState(){
     else
     {
         var tableName = "generated_data" + data_version;
+        tableName = tableName.split(" ").join("_");
         $("#table_name").val(tableName);
         myState.table_name = tableName;
     }
@@ -534,6 +535,7 @@ function doStuff(dataframe){
     var attributes = Object.keys(data[0]);
     var tableName = $("#table_name").val();
     tableName = tableName.split(" ").join("_");
+    $("#table_name").val(tableName);
     
     var kAttributes = [];
     for(var i = 0; i < attributes.length; i++)
