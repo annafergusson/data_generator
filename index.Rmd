@@ -389,9 +389,16 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
   if(prop < max)
   {
     drawPointer(canvas, context, prop);
-    setTimeout(function(){
-      spin(canvas, context, prop + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
-    }, wait)
+    if(wait == 0)
+    {
+       spin(canvas, context, prop + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
+    }
+    else
+    {
+      setTimeout(function(){
+        spin(canvas, context, prop + speed, max, speed, randOutcome, this_spin, total_spins, this_trial, num_trials)
+      }, wait)
+    }
   }
   else
   {
@@ -409,7 +416,14 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
     if(this_spin < total_spins)
     {
       var speed_time = wait*20;
-      setTimeout(function(){nextSpin(this_spin + 1, total_spins, max % 2*Math.PI, this_trial, num_trials)}, speed_time)
+      if(speed_time == 0)
+      {
+         nextSpin(this_spin + 1, total_spins, max % 2*Math.PI, this_trial, num_trials)
+      }
+      else
+      {
+        setTimeout(function(){nextSpin(this_spin + 1, total_spins, max % 2*Math.PI, this_trial, num_trials)}, speed_time)
+      }
     }
     else
     { 
@@ -454,7 +468,14 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
       
       if(this_trial < num_trials)
       {
-        setTimeout(function(){makeSpin(this_trial + 1, num_trials)}, wait*40)
+        if(wait == 0)
+        {
+           makeSpin(this_trial + 1, num_trials)
+        }
+        else
+        {
+          setTimeout(function(){makeSpin(this_trial + 1, num_trials)}, wait*40)
+        }
       }
       else
       {
