@@ -365,6 +365,9 @@ function makeChange(){
    $('#updateDRV').css("background", "yellow");
    $('#updateDRV').css("border", "none");
    $('#updateDRV').show();
+   if($("#spin_num").val() > 20){
+      $("#spin_num").val(20) 
+   }
 }
 
 function addOutcome(){
@@ -632,6 +635,9 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
         {
           outcomes.push(table.rows[0].cells[i].innerHTML)
         }
+        
+        //add num vals
+        
         
         for(var i = 0; i < outcomes.length; i++)
         {
