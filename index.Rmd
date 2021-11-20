@@ -112,7 +112,8 @@ $().ready(function(){
       var num_trials = 10;
       var speed = "slow";
       var table_name = "generated_data1";
-      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name)
+      var data_version = 1;
+      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, data_version)
     }
     else
     {
@@ -123,7 +124,8 @@ $().ready(function(){
       var num_trials = myState.num_trials;
       var speed = myState.speed;
       var table_name = myState.table_name;
-      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name)
+      var data_version = myState.data_version;
+      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, data_version)
     }
     
   }).catch(function (msg) {
@@ -134,14 +136,15 @@ $().ready(function(){
       var num_trials = 20;
       var speed = "slow";
       var table_name = "generated_data1";
-      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name)
+      var data_version = 1;
+      doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, data_version)
   });
   
 });
 
-function doSetup(outcomes, probs, total_spins, num_trials, speed, table_name){
+function doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, data_version){
 
-  data_version = 1;
+  data_version = data_version;
   prev_outcomes = [];
   prev_probs = [];
   prev_spins = 0;
@@ -553,6 +556,7 @@ function saveState(){
         $("#table_name").val(tableName);
         myState.table_name = tableName;
     }
+    myState.data_version = data_version;
   }
 }
 
