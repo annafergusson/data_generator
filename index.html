@@ -381,6 +381,7 @@ function addOutcome(){
   cell = table.rows[1].insertCell(cols);
   cell.innerHTML = "10";
   $("td").prop("contenteditable", true);
+  $("td").keyup(makeChange);
   makeChange();
 }
 
