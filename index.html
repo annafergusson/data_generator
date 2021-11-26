@@ -358,6 +358,7 @@ function doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, da
   $(".shadey").prop("contenteditable", false);
   $("td").keyup(makeChange)
   $("#spin_num").change(makeChange)
+  $("#trial_num").change(checkNum)
   setupSpinner();
   
 }
@@ -370,6 +371,15 @@ function makeChange(){
    $('#updateDRV').show();
    if($("#spin_num").val() > 20){
       $("#spin_num").val(20) 
+   }
+   if($("#trial_num").val() > 1000){
+      $("#trial_num").val(1000) 
+   }
+}
+
+function checkNum(){
+if($("#trial_num").val() > 1000){
+      $("#trial_num").val(1000) 
    }
 }
 
