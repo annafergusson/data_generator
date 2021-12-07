@@ -261,7 +261,7 @@ Update
 Repeat <input type="number" id="trial_num"> times
 </p>
 <p>
-Speed: <select id="speed"><option>slow</option><option>medium</option><option>fast</option><option>bam</option></select>
+Speed: <select id="speed"><option>slow</option><option>medium</option><option>fast</option><option value="bam">bam</option></select>
 </p>
 <p>
 <button onclick="startSim()" id="startData">
@@ -340,7 +340,6 @@ function doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, da
   
   $("#spin_num").val(total_spins);
   $("#trial_num").val(num_trials);
- // $('#speed option[value=' + speed + ']').prop('selected', 'selected');
   $("#speed").val(speed);
   $("#table_name").val(table_name);
   
@@ -533,7 +532,8 @@ function startSim(){
   }else{
     makeSpin(1, num_trials);
     //turn off bam while simulation is running
-    $("#speed option[value='bam']").remove();
+    $("#speed option[value='bam']").attr("disabled","disabled");
+    $("#speed option[value='bam']").css("opacity", 0.5);
   }
 }
 
@@ -788,8 +788,9 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
         {
           doStuff(super_data); 
           $(".loading").hide();
-          $("#speed option[value='bam']").add();
         }
+        $("#speed option[value='bam']").attr("disabled",false);
+        $("#speed option[value='bam']").css("opacity", 1);
       }
     }
   }
