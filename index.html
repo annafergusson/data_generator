@@ -330,6 +330,7 @@ $().ready(function(){
   
 });
 
+
 function doSetup(outcomes, probs, total_spins, num_trials, speed, table_name, dataversion){
 
   data_version = dataversion;
@@ -384,10 +385,11 @@ if($("#trial_num").val() > 1000){
 }
 
 function addOutcome(){
+  var emoji = ["🐱","🐶","🐖","🧸","🦙","🦘","🐄","🐨","🐐","🐙","🦏","🐼","🦒","🦓"];
   var table = document.getElementById('drv');
   var cols =  table.rows[0].cells.length;
   var cell = table.rows[0].insertCell(cols);
-  cell.innerHTML = "?";
+  cell.innerHTML = emoji[cols - 1];
   cell = table.rows[1].insertCell(cols);
   cell.innerHTML = "10";
   $("td").prop("contenteditable", true);
@@ -405,6 +407,15 @@ function deleteOutcome(){
   makeChange();
 }
 
+function containsDuplicates(a) {
+  for (let i = 0; i < a.length; i++) {
+    if (a.indexOf(a[i]) !== a.lastIndexOf(a[i])) {
+      return true
+    }
+  }
+  return false
+}
+
 function setupSpinner(){
 
   //data_version += 1;
@@ -418,46 +429,118 @@ function setupSpinner(){
     probs.push(table.rows[1].cells[i].innerHTML);
   }
   
-  if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs) && prev_spins == spins)
+  if(containsDuplicates(outcomes))
   {
-    //no change
+    alert("You have duplicates in your outcomes!")
   }
   else
   {
-    //change
-    if(prev_outcomes.length > 0)
-    { 
-      data_version += 1;
-      var tableName = "generated_data" + data_version;
-      $("#table_name").val(tableName);
+    if(compareArrays(outcomes, prev_outcomes) && compareArrays(probs, prev_probs) && prev_spins == spins)
+    {
+      //no change
     }
-  }
+    else
+    {
+      //change
+      if(prev_outcomes.length > 0)
+      { 
+        data_version += 1;
+        var tableName = "generated_data" + data_version;
+        $("#table_name").val(tableName);
+      }
+    }
+        
+    prev_outcomes = outcomes;
+    prev_probs = probs;
+    prev_spins = spins;
+    
+    saveState();
+    var canvas = document.getElementById("spinner");
+    var context = canvas.getContext("2d");
+    canvas.width = $("#spinner-wrapper").width();
+    canvas.height = $("#spinner-wrapper").height();
+    
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    
+    context.fillStyle = "#F0F0F0";
+    context.strokeStyle = "black";
+    context.beginPath();
+    context.rect(0, 0, canvas.width, canvas.height);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    
+    //get details from DRV table
+    var table = document.getElementById('drv');
+    var lastProp = 0;
+    
+    //get sum of weightings
+    var sumWeights = 0;
+    for(var i = 1; i < table.rows[0].cells.length; i++)
+    {
+      //show the sector
+      sumWeights += table.rows[1].cells[i].innerHTML * 1;
+    }
+    
+    
+    for(var i = 1; i < table.rows[0].cells.length; i++)
+    {
+      //show the sector
+      var thisProp = table.rows[1].cells[i].innerHTML/sumWeights;
+      var thisText = table.rows[0].cells[i].innerHTML;
       
-  prev_outcomes = outcomes;
-  prev_probs = probs;
-  prev_spins = spins;
-  
+      context.beginPath();
+      context.moveTo(canvas.width * (lastProp + thisProp), 0);
+      context.lineTo(canvas.width * (lastProp + thisProp), canvas.height);
+      context.closePath();
+      context.stroke();
+      
+      //show the text
+      var x = canvas.width * ((thisProp)/2 + lastProp);
+      var y = canvas.height/2;
+      context.font = canvas.width * 0.05 + "px Arial";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillStyle = "#000000";
+      context.fillText(thisText, x, y);
+      
+      lastProp += thisProp;
+    }
+    
+    //draw pointer
+    var canvas = document.getElementById("pointer");
+    var context = canvas.getContext("2d");
+    canvas.width = $("#spinner-wrapper").width();
+    canvas.height = $("#spinner-wrapper").height();
+    drawPointer(canvas, context, 0);
+    
+     $('#startData').prop('disabled', false);
+     $('#startData').css("opacity", 1);
+     $('#updateDRV').css("background", "");
+     $(".sectiony").show();
+     $('#updateDRV').hide();
+  }
+}
+
+function startSim(){
   saveState();
-  var canvas = document.getElementById("spinner");
-  var context = canvas.getContext("2d");
-  canvas.width = $("#spinner-wrapper").width();
-  canvas.height = $("#spinner-wrapper").height();
+  super_data = [];
+  var num_trials = $("#trial_num").val()*1;
+  if($("#speed").val() == "bam")
+  {
+    //cut it off here
+    makeBam(num_trials);
+  }else{
+    makeSpin(1, num_trials);
+    //turn off bam while simulation is running
+    $("#speed option[value*='bam']").prop('disabled',true);
+  }
+}
+
+function makeBam(num_trials){
+  $(".loading").show();
   
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  
-  context.fillStyle = "#F0F0F0";
-  context.strokeStyle = "black";
-  context.beginPath();
-  context.rect(0, 0, canvas.width, canvas.height);
-  context.closePath();
-  context.fill();
-  context.stroke();
-  
-  //get details from DRV table
   var table = document.getElementById('drv');
-  var lastProp = 0;
-  
-  //get sum of weightings
   var sumWeights = 0;
   for(var i = 1; i < table.rows[0].cells.length; i++)
   {
@@ -465,50 +548,64 @@ function setupSpinner(){
     sumWeights += table.rows[1].cells[i].innerHTML * 1;
   }
   
-  
+  var outcomes = [];
+  var probs = [];
   for(var i = 1; i < table.rows[0].cells.length; i++)
   {
-    //show the sector
-    var thisProp = table.rows[1].cells[i].innerHTML/sumWeights;
-    var thisText = table.rows[0].cells[i].innerHTML;
-    
-    context.beginPath();
-    context.moveTo(canvas.width * (lastProp + thisProp), 0);
-    context.lineTo(canvas.width * (lastProp + thisProp), canvas.height);
-    context.closePath();
-    context.stroke();
-    
-    //show the text
-    var x = canvas.width * ((thisProp)/2 + lastProp);
-    var y = canvas.height/2;
-    context.font = canvas.width * 0.05 + "px Arial";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillStyle = "#000000";
-    context.fillText(thisText, x, y);
-    
-    lastProp += thisProp;
+    outcomes.push(table.rows[0].cells[i].innerHTML);
+    probs.push(table.rows[1].cells[i].innerHTML/sumWeights);
   }
   
-  //draw pointer
-  var canvas = document.getElementById("pointer");
-  var context = canvas.getContext("2d");
-  canvas.width = $("#spinner-wrapper").width();
-  canvas.height = $("#spinner-wrapper").height();
-  drawPointer(canvas, context, 0);
+  for(var i = 0; i < num_trials; i++)
+  {
+    var data = {};
+    var total_spins = $("#spin_num").val()*1;
   
-   $('#startData').prop('disabled', false);
-   $('#startData').css("opacity", 1);
-   $('#updateDRV').css("background", "");
-   $(".sectiony").show();
-   $('#updateDRV').hide();
-}
-
-function startSim(){
-  saveState();
-  super_data = [];
-  var num_trials = $("#trial_num").val()*1;
-  makeSpin(1, num_trials);
+    for(var j = 0; j < total_spins; j++)
+    {
+      var randProp = Math.random();
+      var randOutcome = "";
+      var cumProp = 0;
+      for(var k = 0; k < outcomes.length; k++)
+      {
+          cumProp += probs[k];
+          if(randProp < cumProp){
+             randOutcome = outcomes[k]
+             break;
+          }
+      }
+      var var_name = "val" + (j + 1);
+      data[var_name] = randOutcome;
+    }
+      
+    var combine = "";
+    for(var j = 1; j <= total_spins; j++)
+    {
+      combine = combine + data["val" + j];
+      if(j < total_spins){combine = combine + " "}
+    }
+    data["vals"] = combine;
+      
+    var table = document.getElementById('drv');
+    var outcomes = [];
+    for(var k = 1; k < table.rows[0].cells.length; k++)
+    {
+      outcomes.push(table.rows[0].cells[k].innerHTML)
+    }
+      
+    for(var k = 0; k < outcomes.length; k++)
+    {
+        var count = 0;
+        for(var j = 1; j <= total_spins; j++)
+        {
+          if(data["val" + j] == outcomes[k]){count += 1}
+        }
+        data["count(" + outcomes[k] + ")"] = count;
+    }
+    super_data.push(data);
+  }
+  doStuff(super_data); 
+  $(".loading").hide();
 }
 
 function makeSpin(this_trial, num_trials){
@@ -691,6 +788,7 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
         {
           doStuff(super_data); 
           $(".loading").hide();
+          $("#speed option[value*='bam']").prop('disabled',false);
         }
       }
     }
