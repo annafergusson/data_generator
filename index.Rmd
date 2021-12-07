@@ -345,7 +345,7 @@ function startSim(){
   }else{
     makeSpin(1, num_trials);
     //turn off bam while simulation is running
-    $("#speed option[value*='bam']").prop('disabled',true);
+    $("#speed option[value='bam']").remove();
   }
 }
 
@@ -600,7 +600,7 @@ function spin(canvas, context, prop, max, speed, randOutcome, this_spin, total_s
         {
           doStuff(super_data); 
           $(".loading").hide();
-          $("#speed option[value*='bam']").prop('disabled',false);
+          $("#speed option[value='bam']").add();
         }
       }
     }
